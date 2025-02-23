@@ -1,5 +1,6 @@
 import requests
 
+
 def fetch_animal_data(name, api_key):
     """Fetch data from the API based on the animal's name."""
     url = f'https://api.api-ninjas.com/v1/animals?name={name}'
@@ -31,10 +32,10 @@ def animal_content(animals_data):
                 <strong>Diet:</strong> {animal["characteristics"].get("diet", "Unknown")}<br/>
                 <strong>Location:</strong> {animal["locations"][0] if animal["locations"] else "Unknown"}<br/>
                 {(
-                    f'<strong>Type:</strong> {animal["characteristics"].get("type", "Unknown")}<br/>'
-                    if "type" in animal["characteristics"]
-                    else ""
-                )}
+            f'<strong>Type:</strong> {animal["characteristics"].get("type", "Unknown")}<br/>'
+            if "type" in animal["characteristics"]
+            else ""
+        )}
             </p>
         </li>
         '''
@@ -43,8 +44,14 @@ def animal_content(animals_data):
     return "\n".join(output)
 
 
-def generate_animal_html(template, animals_data):
+def generate_animal_html(template, animals_data, animal_name):
     """Insert animal data into the HTML template."""
+    if not animals_data:  # If no data is returned, show a message saying the animal doesn't exist
+        return template.replace(
+            "__REPLACE_ANIMALS_INFO__",
+            f'<h2>We are sorry! The animal <span style="color: red;">"{animal_name}"</span> doesn\'t exist.</h2>'
+        )
+
     animal_info_html = animal_content(animals_data)
     return template.replace("__REPLACE_ANIMALS_INFO__", animal_info_html)
 
@@ -66,13 +73,20 @@ def main():
     # Fetch data for the specified animal
     animals_data = fetch_animal_data(animal_name, API_KEY)
 
-    if animals_data:  # If data is fetched successfully
-        html_template = load_animal_data()
-        updated_html = generate_animal_html(html_template, animals_data)
-        save_html("animals.html", updated_html)
+    # Load HTML template
+    html_template = load_animal_data()
+
+    # Generate HTML content based on the fetched data
+    updated_html = generate_animal_html(html_template, animals_data, animal_name)
+
+    # Save the generated HTML
+    save_html("animals.html", updated_html)
+
+    # Print success message
+    if animals_data:
         print("Website was successfully generated to the file animals.html.")
     else:
-        print(f"No data found for {animal_name}")
+        print(f"No data was found for {animal_name}. The website will show a message about it.")
 
 
 if __name__ == "__main__":
