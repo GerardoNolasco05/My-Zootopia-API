@@ -1,8 +1,16 @@
-import json
 import requests
 
-API_KEY = '/EmMQfLDmjxUCotWswgwRA==v88dotSfqCvJuO9T'
-ANIMAL_NAME = 'Fox'
+def fetch_animal_data(name, api_key):
+    """Fetch data from the API based on the animal's name."""
+    url = f'https://api.api-ninjas.com/v1/animals?name={name}'
+    response = requests.get(url, headers={'X-Api-Key': api_key})
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        return response.json()  # Return the JSON data
+    else:
+        print(f"Error fetching data for {name}: {response.status_code}")
+        return []  # Return an empty list if the API call fails
 
 
 def load_animal_data():
@@ -16,20 +24,21 @@ def animal_content(animals_data):
     output = []
 
     for animal in animals_data:
-        output.append(f'''
+        animal_info = f'''
         <li class="cards__item">
-            <div class="card__title">{animal["name"]}</div>
+            <div class="card__title">{animal.get("name", "Unknown Animal")}</div>
             <p class="card__text">
-                <strong>Diet:</strong> {animal["characteristics"]["diet"]}<br/>
-                <strong>Location:</strong> {animal["locations"][0]}<br/>
+                <strong>Diet:</strong> {animal["characteristics"].get("diet", "Unknown")}<br/>
+                <strong>Location:</strong> {animal["locations"][0] if animal["locations"] else "Unknown"}<br/>
                 {(
-            f'<strong>Type:</strong> {animal["characteristics"]["type"]}<br/>'
-            if "type" in animal["characteristics"]
-            else ""
-        )}
+                    f'<strong>Type:</strong> {animal["characteristics"].get("type", "Unknown")}<br/>'
+                    if "type" in animal["characteristics"]
+                    else ""
+                )}
             </p>
         </li>
-        ''')
+        '''
+        output.append(animal_info)
 
     return "\n".join(output)
 
@@ -46,31 +55,24 @@ def save_html(filename, content):
         file.write(content)
 
 
-def fetch_animal_data(name):
-    """Fetch data from the API based on the animal's name."""
-    url = f'https://api.api-ninjas.com/v1/animals?name={name}'
-    response = requests.get(url, headers={'X-Api-Key': API_KEY})
-
-    # Check if the request was successful
-    if response.status_code == 200:
-        return response.json()  # Return the JSON data
-    else:
-        print(f"Error fetching data for {name}: {response.status_code}")
-        return []  # Return an empty list if the API call fails
-
-
 def main():
     """Main function to process animal data and generate an HTML file."""
-    # Fetch data for "Fox" from the API
-    animals_data = fetch_animal_data(ANIMAL_NAME)
+    # Define the API Key
+    API_KEY = '/EmMQfLDmjxUCotWswgwRA==v88dotSfqCvJuO9T'
+
+    # Ask the user to enter the name of an animal
+    animal_name = input("Enter a name of an animal: ")
+
+    # Fetch data for the specified animal
+    animals_data = fetch_animal_data(animal_name, API_KEY)
 
     if animals_data:  # If data is fetched successfully
         html_template = load_animal_data()
         updated_html = generate_animal_html(html_template, animals_data)
         save_html("animals.html", updated_html)
-        print("HTML file generated successfully: animals.html")
+        print("Website was successfully generated to the file animals.html.")
     else:
-        print(f"No data found for {ANIMAL_NAME}")
+        print(f"No data found for {animal_name}")
 
 
 if __name__ == "__main__":
